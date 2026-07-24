@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void { Schema::create('visitors', function(Blueprint $t){$t->uuid('id')->primary();$t->string('name',200)->index();$t->text('phone');$t->char('phone_hash',64)->index();$t->string('phone_last4',4)->nullable()->index();$t->text('address')->nullable();$t->string('institution',200)->nullable()->index();$t->text('photo_path')->nullable();$t->boolean('active')->default(true)->index();$t->timestamp('consent_at')->nullable();$t->timestamp('last_seen_at')->nullable()->index();$t->timestamps();$t->softDeletes();}); } public function down(): void {Schema::dropIfExists('visitors');} };

@@ -1,0 +1,1 @@
+export default function NotFound() { return <main className="grid min-h-screen place-items-center p-6"><div className="card p-10 text-center"><h1 className="text-3xl font-bold">Halaman tidak ditemukan</h1><a href="/" className="btn-primary mt-6">Kembali</a></div></main>; }

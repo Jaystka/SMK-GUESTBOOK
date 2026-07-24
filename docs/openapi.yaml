@@ -1,0 +1,116 @@
+openapi: 3.1.0
+info:
+  title: School Guestbook API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+paths:
+  /health:
+    get:
+      summary: API health
+      responses:
+        "200": { description: Healthy }
+  /auth/login:
+    post:
+      summary: Login admin or operator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+                device_name: { type: string }
+      responses:
+        "200": { description: Token issued }
+        "422": { description: Invalid credentials }
+  /face/identify:
+    post:
+      summary: Identify visitor face
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImageRequest"
+      responses:
+        "200": { description: Match result }
+        "422": { description: Invalid face image }
+        "503": { description: AI service unavailable }
+  /visitors:
+    post:
+      summary: Register visitor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, phone, photo, consent]
+              properties:
+                name: { type: string }
+                phone: { type: string }
+                address: { type: string, nullable: true }
+                institution: { type: string, nullable: true }
+                photo: { type: string, description: Base64 image or data URL }
+                consent: { type: boolean }
+      responses:
+        "201": { description: Visitor registered }
+        "409": { description: Existing phone }
+        "422": { description: Validation error }
+    get:
+      summary: Paginated visitors
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: Visitor list }
+  /visits:
+    post:
+      summary: Create check-in visit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [visitor_id, purpose]
+              properties:
+                visitor_id: { type: string, format: uuid }
+                purpose: { type: string }
+                employee_id: { type: string, format: uuid, nullable: true }
+                meet_person: { type: string, nullable: true }
+                visit_photo: { type: string, nullable: true }
+                confidence_score: { type: number, nullable: true }
+                recognition_method: { type: string, enum: [face, phone, manual, new_registration] }
+      responses:
+        "201": { description: Visit created }
+    get:
+      summary: Paginated visits
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200": { description: Visit list }
+  /visits/{visit}/checkout:
+    patch:
+      summary: Check out a visit
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: visit
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: Visit checked out }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum
+  schemas:
+    ImageRequest:
+      type: object
+      required: [image]
+      properties:
+        image: { type: string, description: Base64 image or data URL }

@@ -1,0 +1,15 @@
+"use client";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { api } from "@/lib/api";
+import { clearAuth, getStoredUser, getToken } from "@/lib/auth";
+import type { AuthUser } from "@/lib/types";
+
+const nav = [{ href: "/admin", label: "Ringkasan" }, { href: "/admin/visits", label: "Kunjungan" }, { href: "/admin/visitors", label: "Tamu" }, { href: "/admin/employees", label: "Pegawai" }];
+export function AdminShell({ children }: { children: React.ReactNode }) {
+  const router = useRouter(); const pathname = usePathname(); const [user, setUser] = useState<AuthUser | null>(null); const [ready, setReady] = useState(false);
+  useEffect(() => { if (!getToken()) { router.replace("/admin/login"); return; } const stored = getStoredUser(); if (stored) setUser(stored); api<{ user: AuthUser }>("/auth/me", { auth: true }).then(r => { setUser(r.user); setReady(true); }).catch(() => { clearAuth(); router.replace("/admin/login"); }); }, [router]);
+  async function logout() { try { await api("/auth/logout", { method: "POST", auth: true }); } finally { clearAuth(); router.replace("/admin/login"); } }
+  if (!ready) return <main className="grid min-h-screen place-items-center text-sm text-slate-600">Memuat dashboard...</main>;
+  return <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr] bg-slate-50"><aside className="border-b border-slate-200 bg-white/60 backdrop-blur-xl p-5 lg:min-h-screen lg:border-b-0 lg:border-r shadow-sm"><div className="flex items-center gap-4"><div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-white to-slate-50 shadow-[0_6px_12px_-3px_rgba(34,167,230,0.35),inset_0_-3px_5px_-1px_rgba(0,0,0,0.1),inset_0_2px_4px_rgba(255,255,255,1)] border border-slate-200 p-1.5"><img src="/logosmk.png" alt="Logo SMK" className="h-full w-full object-contain drop-shadow-sm" /></div><div><p className="font-extrabold text-slate-800">Buku Tamu</p><p className="text-xs font-medium text-brand-600">Dashboard Kunjungan</p></div></div><nav className="mt-8 grid grid-cols-2 gap-2 lg:grid-cols-1">{nav.map(item => <a key={item.href} href={item.href} className={`rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200 ${pathname === item.href ? "bg-brand-50 text-brand-700 shadow-sm ring-1 ring-brand-500/10" : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-800"}`}>{item.label}</a>)}</nav><div className="mt-8 border-t border-slate-100 pt-6"><div className="rounded-2xl bg-slate-100/50 p-4 border border-slate-100"><p className="truncate text-sm font-bold text-slate-800">{user?.name}</p><p className="truncate text-xs text-slate-500 mt-0.5">{user?.email}</p></div><button onClick={logout} className="mt-4 w-full rounded-xl border border-red-100 bg-red-50/50 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 hover:text-red-700">Keluar Sistem</button></div></aside><main className="p-4 md:p-8 lg:p-10 mx-auto w-full max-w-7xl">{children}</main></div>;
+}

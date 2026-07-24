@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void {Schema::create('audit_logs',function(Blueprint $t){$t->uuid('id')->primary();$t->uuid('user_id')->nullable();$t->string('action',100)->index();$t->string('subject_type')->nullable();$t->uuid('subject_id')->nullable();$t->string('ip_address',45)->nullable();$t->string('user_agent',500)->nullable();$t->jsonb('metadata')->nullable();$t->timestamp('created_at')->index();$t->foreign('user_id')->references('id')->on('users')->nullOnDelete();$t->index(['subject_type','subject_id']);});} public function down(): void {Schema::dropIfExists('audit_logs');} };

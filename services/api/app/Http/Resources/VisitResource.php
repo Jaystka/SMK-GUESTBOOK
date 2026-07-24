@@ -1,0 +1,4 @@
+<?php
+namespace App\Http\Resources;
+use Illuminate\Http\Request; use Illuminate\Http\Resources\Json\JsonResource;
+class VisitResource extends JsonResource { public function toArray(Request $request): array {return ['id'=>$this->id,'visitor'=>$this->whenLoaded('visitor',fn()=>['id'=>$this->visitor->id,'name'=>$this->visitor->name,'institution'=>$this->visitor->institution,'phone_last4'=>$this->visitor->phone_last4]),'employee'=>$this->whenLoaded('employee',fn()=>['id'=>$this->employee?->id,'name'=>$this->employee?->name,'department'=>$this->employee?->department]),'purpose'=>$this->purpose,'meet_person'=>$this->meet_person,'confidence_score'=>$this->confidence_score,'recognition_method'=>$this->recognition_method,'checkin_time'=>$this->checkin_time?->toIso8601String(),'checkout_time'=>$this->checkout_time?->toIso8601String(),'notes'=>$this->notes,'photo_url'=>$request->user()&&$this->visit_photo_path?route('media.visit-photo',$this->id):null];} }

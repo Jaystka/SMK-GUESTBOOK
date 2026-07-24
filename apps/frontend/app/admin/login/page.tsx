@@ -1,0 +1,12 @@
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { api, ApiError } from "@/lib/api";
+import { saveAuth } from "@/lib/auth";
+import type { AuthUser } from "@/lib/types";
+
+export default function LoginPage() {
+  const router = useRouter(); const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
+  async function submit(e: React.FormEvent) { e.preventDefault(); setBusy(true); setError(""); try { const result = await api<{ token: string; user: AuthUser }>("/auth/login", { method: "POST", body: JSON.stringify({ email, password, device_name: "admin-web" }) }); saveAuth(result.token, result.user); router.replace("/admin"); } catch (err) { setError(err instanceof ApiError ? err.message : "Login gagal."); } finally { setBusy(false); } }
+  return <main className="grid min-h-screen place-items-center p-4 bg-slate-50/50 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-100/40 via-slate-50 to-sky-100/30"><div className="card w-full max-w-md p-8 md:p-10 shadow-xl shadow-brand-900/5 ring-1 ring-brand-900/5 bg-white/80 backdrop-blur-xl"><a href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-700 hover:text-brand-800 transition-colors"><span>←</span> Kembali ke Registrasi</a><div className="mt-8"><span className="badge">ADMIN SEKOLAH</span><h1 className="mt-4 text-3xl font-extrabold text-slate-900 tracking-tight">Masuk ke Dashboard</h1><p className="mt-2 text-sm text-slate-500 leading-relaxed">Gunakan akun operator yang telah diberikan untuk mengelola buku tamu.</p></div>{error && <p className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-700 border border-red-100">{error}</p>}<form onSubmit={submit} className="mt-8 space-y-5"><div><label className="label">Alamat Email</label><input className="field" type="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@sekolah.sch.id" required /></div><div><label className="label">Password</label><input className="field" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required /></div><button className="btn-primary w-full py-3.5 mt-2 shadow-lg shadow-brand-600/20" disabled={busy}>{busy ? "Memeriksa kredensial..." : "Masuk ke Sistem"}</button></form></div></main>;
+}
