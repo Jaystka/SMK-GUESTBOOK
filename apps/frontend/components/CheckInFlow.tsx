@@ -41,7 +41,7 @@ export function CheckInFlow() {
     </section>
     <aside className="card overflow-hidden p-6 md:p-8">
       <div className="mb-6 flex justify-center">
-        <img src="/animasi.png" alt="Ilustrasi Buku Tamu" className="w-[85%] md:w-[75%] max-w-[350px] h-auto object-contain drop-shadow-md transition-transform hover:scale-105 duration-500" />
+        <video src="/animasi2.mp4" autoPlay loop muted playsInline className="w-[85%] md:w-[75%] max-w-[350px] h-auto object-contain drop-shadow-md rounded-2xl" />
       </div>
       <div className="rounded-3xl bg-gradient-to-br from-brand-800 to-slate-900 p-7 text-white shadow-inner"><p className="text-sm font-bold text-brand-400 tracking-wider">LANGKAH REGISTRASI DIGITAL</p><ol className="mt-6 space-y-5">{["Hadap ke kamera", "Sistem mengenali Anda", "Sampaikan keperluan kunjungan", "Selesai! Anda siap masuk"].map((item, index) => <li key={item} className="flex gap-4 items-start"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/10 text-sm font-bold backdrop-blur-md border border-white/20 shadow-sm">{index + 1}</span><span className="pt-1 font-medium text-brand-50 leading-relaxed">{item}</span></li>)}</ol></div><div className="hidden mt-8 rounded-2xl bg-slate-50/50 p-6 border border-slate-100"><h3 className="font-bold text-slate-800">Cari dengan Nomor Telepon</h3><p className="mt-1 text-sm text-slate-500">Gunakan nomor telepon jika kamera bermasalah.</p><PhoneSearch onFound={(v) => { setVisitor(v); setStep("visit"); }} /></div>
     </aside>
