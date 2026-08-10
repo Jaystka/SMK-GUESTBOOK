@@ -8,7 +8,7 @@ type Step = "capture" | "register" | "visit" | "success";
 type Visitor = { id: string; name: string; institution?: string | null; confidence?: number | null; method: "face" | "new_registration" | "phone" };
 
 export function CheckInFlow() {
-  const [step, setStep] = useState<Step>("capture"); const [image, setImage] = useState(""); const [scanStatus, setScanStatus] = useState<"idle" | "processing" | "success" | "error">("idle"); const [message, setMessage] = useState<string | null>(null); const [visitor, setVisitor] = useState<Visitor | null>(null); const [employees, setEmployees] = useState<Employee[]>([]);
+  const [step, setStep] = useState<Step>("capture"); const [image, setImage] = useState(""); const [scanStatus, setScanStatus] = useState<"idle" | "processing" | "success" | "error" | "unregistered">("idle"); const [message, setMessage] = useState<string | null>(null); const [visitor, setVisitor] = useState<Visitor | null>(null); const [employees, setEmployees] = useState<Employee[]>([]);
   useEffect(() => { api<{ data: Employee[] }>("/employees/options").then(r => setEmployees(r.data)).catch(() => setEmployees([])); }, []);
   async function identify(photo: string) {
     setImage(photo); setScanStatus("processing"); setMessage(null);
@@ -19,9 +19,8 @@ export function CheckInFlow() {
         setScanStatus("success");
         setTimeout(() => { setScanStatus("idle"); setStep("visit"); }, 2000);
       } else {
-        setMessage("Wajah belum dikenali. Silakan lengkapi data tamu baru.");
-        setScanStatus("error");
-        setTimeout(() => { setScanStatus("idle"); setStep("register"); }, 2000);
+        setScanStatus("unregistered");
+        setTimeout(() => { setScanStatus("idle"); setStep("register"); }, 2500);
       }
     } catch (error) {
       setMessage(error instanceof ApiError ? error.message : "Gagal menghubungi server.");
@@ -32,9 +31,15 @@ export function CheckInFlow() {
   function handleRetry() { setScanStatus("idle"); setMessage(null); }
   return <div className="grid gap-6 lg:grid-cols-[1fr_.78fr]">
     <section className="card p-6 md:p-10">
-      <div className="mb-6"><span className="badge">REGISTRASI TAMU</span><h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900">Selamat Datang!</h2><p className="mt-2 text-slate-500 leading-relaxed">Silakan posisikan wajah Anda di depan kamera untuk memulai. Kami akan mengenali Anda dalam hitungan detik.</p></div>
+      {step === "capture" && (
+        <div className="mb-6">
+          <span className="badge">REGISTRASI TAMU</span>
+          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900">Selamat Datang!</h2>
+          <p className="mt-2 text-slate-500 leading-relaxed">Silakan posisikan wajah Anda di depan kamera untuk memulai. Kami akan mengenali Anda dalam hitungan detik.</p>
+        </div>
+      )}
       {message && <div className="mb-5 rounded-2xl bg-amber-50 p-4 text-sm text-amber-900">{message}</div>}
-      {step === "capture" && <CameraCapture onCapture={identify} status={scanStatus} onRetry={handleRetry} />}
+      {step === "capture" && <CameraCapture onCapture={identify} status={scanStatus as any} onRetry={handleRetry} onRegister={() => { setScanStatus("idle"); setStep("register"); }} />}
       {step === "register" && <RegistrationForm image={image} onRegistered={(v) => { setVisitor(v); setStep("visit"); }} onBack={reset} />}
       {step === "visit" && visitor && <VisitForm visitor={visitor} image={image} employees={employees} onSuccess={() => setStep("success")} onBack={reset} />}
       {step === "success" && visitor && <div className="py-16 text-center animate-in fade-in zoom-in duration-500"><div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-brand-100 text-5xl text-brand-600 shadow-[0_0_40px_rgba(34,167,230,0.3)] ring-8 ring-brand-50">✓</div><h3 className="mt-6 text-3xl font-extrabold text-slate-900">Registrasi Berhasil!</h3><p className="mt-3 text-slate-500 text-lg">Terima kasih telah berkunjung, <strong className="text-brand-700">{visitor.name}</strong>. Silakan menuju ruangan tujuan Anda. Semoga hari Anda menyenangkan!</p><button onClick={reset} className="btn-primary mt-8 px-8 py-4 text-lg">Kembali ke Beranda</button></div>}

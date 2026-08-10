@@ -1,13 +1,14 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ScanFace, CheckCircle2, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { ScanFace, CheckCircle2, XCircle, AlertCircle, Loader2, Sparkles, UserPlus } from 'lucide-react';
 
 type Props = {
   onCapture: (image: string) => void;
-  status?: "idle" | "processing" | "success" | "error";
+  status?: "idle" | "processing" | "success" | "error" | "unregistered";
   onRetry?: () => void;
+  onRegister?: () => void;
 };
-export function CameraCapture({ onCapture, status = "idle", onRetry }: Props) {
+export function CameraCapture({ onCapture, status = "idle", onRetry, onRegister }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -180,16 +181,34 @@ export function CameraCapture({ onCapture, status = "idle", onRetry }: Props) {
           </div>
         )}
 
+        {/* Overlay Unregistered (Popup User Baru) */}
+        {status === 'unregistered' && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-white p-6 animate-in zoom-in-95 duration-500">
+            <div className="flex flex-col items-center text-center w-full max-w-sm">
+              <div className="mb-6 relative">
+                <div className="w-24 h-24 rounded-full bg-brand-50 flex items-center justify-center text-brand-500 relative z-10 shadow-sm border-2 border-brand-100">
+                  <Sparkles size={48} strokeWidth={1.5} />
+                </div>
+                {/* Efek ping animasi yang ramah (menyambut) */}
+                <div className="absolute inset-0 bg-brand-400 rounded-full animate-ping opacity-20" style={{ animationDuration: '2s' }}></div>
+              </div>
+
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Selamat Datang!</h3>
+              <p className="text-sm text-slate-500 max-w-[280px]">Selamat berkunjung ke SMKN Ngadirojo. Silakan lakukan registrasi untuk melanjutkan.</p>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* Action Buttons */}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 w-full">
         {status === 'idle' && (
           <>
-            <button className="py-3 px-4 bg-brand-600 text-white rounded-xl font-medium hover:bg-brand-700 transition-colors shadow-sm focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 outline-none disabled:opacity-50" onClick={capture} disabled={!ready || error !== null}>
+            <button className="col-span-2 py-3 px-4 bg-brand-600 text-white rounded-xl font-medium hover:bg-brand-700 transition-colors shadow-sm focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 outline-none disabled:opacity-50" onClick={capture} disabled={!ready || error !== null}>
               Ambil Foto
             </button>
-            <label className="py-3 px-4 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors text-center cursor-pointer shadow-sm disabled:opacity-50">
+            <label className="hidden py-3 px-4 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors text-center cursor-pointer shadow-sm disabled:opacity-50">
               <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={upload} />
               Unggah Foto
             </label>
