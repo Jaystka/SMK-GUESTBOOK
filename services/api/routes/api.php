@@ -20,6 +20,7 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/visitors/search', [VisitorController::class, 'searchByPhone'])->middleware('throttle:public-write');
     Route::post('/visits', [VisitController::class, 'store'])->middleware('throttle:public-write');
     Route::get('/employees/options', [EmployeeController::class, 'options']);
+    Route::get('/settings', [\App\Http\Controllers\SettingController::class, 'index']);
 
     Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
         Route::get('/auth/me', [AuthController::class, 'me']);
@@ -30,6 +31,9 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/users', [\App\Http\Controllers\UserController::class, 'store'])->middleware('role:super_admin');
         Route::patch('/users/{user}', [\App\Http\Controllers\UserController::class, 'update'])->middleware('role:super_admin');
         Route::delete('/users/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->middleware('role:super_admin');
+
+        // Settings Management
+        Route::patch('/settings', [\App\Http\Controllers\SettingController::class, 'update'])->middleware('role:super_admin');
 
         Route::get('/dashboard/today', [DashboardController::class, 'today'])->middleware('role:super_admin,operator,security');
         Route::get('/visitors', [VisitorController::class, 'index'])->middleware('role:super_admin,operator,security');

@@ -9,7 +9,62 @@ type Visitor = { id: string; name: string; institution?: string | null; confiden
 
 export function CheckInFlow() {
   const [step, setStep] = useState<Step>("capture"); const [image, setImage] = useState(""); const [scanStatus, setScanStatus] = useState<"idle" | "processing" | "success" | "error" | "unregistered">("idle"); const [message, setMessage] = useState<string | null>(null); const [visitor, setVisitor] = useState<Visitor | null>(null); const [employees, setEmployees] = useState<Employee[]>([]);
-  useEffect(() => { api<{ data: Employee[] }>("/employees/options").then(r => setEmployees(r.data)).catch(() => setEmployees([])); }, []);
+  const [locationAllowed, setLocationAllowed] = useState<boolean | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  useEffect(() => { 
+    api<{ data: Employee[] }>("/employees/options").then(r => setEmployees(r.data)).catch(() => setEmployees([])); 
+    checkLocation();
+  }, []);
+
+  async function checkLocation() {
+    try {
+      const settings = await api<Record<string, any>>("/settings");
+      if (settings.radius_enabled && settings.radius_lat && settings.radius_lng && settings.radius_meters) {
+        if (!navigator.geolocation) {
+          setLocationError("Browser Anda tidak mendukung deteksi lokasi. Akses ditolak.");
+          setLocationAllowed(false);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat1 = pos.coords.latitude;
+            const lon1 = pos.coords.longitude;
+            const lat2 = parseFloat(settings.radius_lat);
+            const lon2 = parseFloat(settings.radius_lng);
+            const maxDist = parseInt(settings.radius_meters, 10);
+            
+            const R = 6371e3; // meters
+            const phi1 = lat1 * Math.PI/180;
+            const phi2 = lat2 * Math.PI/180;
+            const dPhi = (lat2-lat1) * Math.PI/180;
+            const dLambda = (lon2-lon1) * Math.PI/180;
+            const a = Math.sin(dPhi/2) * Math.sin(dPhi/2) + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dLambda/2) * Math.sin(dLambda/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const d = R * c;
+            
+            if (d > maxDist) {
+              setLocationError(`Anda berada terlalu jauh (${Math.round(d)} meter) dari lokasi sekolah. Maksimal jarak adalah ${maxDist} meter.`);
+              setLocationAllowed(false);
+            } else {
+              setLocationAllowed(true);
+            }
+          },
+          (err) => {
+            setLocationError("Gagal mendapatkan izin lokasi. Anda harus mengizinkan akses lokasi untuk check-in.");
+            setLocationAllowed(false);
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      } else {
+        setLocationAllowed(true);
+      }
+    } catch (e) {
+      // API error, just allow to avoid blocking legitimate users if DB isn't ready
+      setLocationAllowed(true);
+    }
+  }
+
   async function identify(photo: string) {
     setImage(photo); setScanStatus("processing"); setMessage(null);
     try {
@@ -29,6 +84,25 @@ export function CheckInFlow() {
   }
   function reset() { setStep("capture"); setImage(""); setVisitor(null); setMessage(null); setScanStatus("idle"); }
   function handleRetry() { setScanStatus("idle"); setMessage(null); }
+  if (locationAllowed === null) {
+    return <div className="grid min-h-[60vh] place-items-center"><div className="text-center"><div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600"></div><p className="text-slate-500 font-medium">Memeriksa lokasi Anda...</p></div></div>;
+  }
+  
+  if (locationAllowed === false) {
+    return (
+      <div className="grid min-h-[60vh] place-items-center">
+        <div className="card max-w-md p-8 text-center shadow-lg border border-red-100">
+          <div className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-red-50 text-red-500">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800">Akses Ditolak</h2>
+          <p className="mt-3 text-slate-500 leading-relaxed">{locationError}</p>
+          <button onClick={checkLocation} className="btn-secondary w-full mt-6">Coba Periksa Ulang</button>
+        </div>
+      </div>
+    );
+  }
+
   return <div className="grid gap-6 lg:grid-cols-[1fr_.78fr]">
     <section className="card p-6 md:p-10">
       {step === "capture" && (
