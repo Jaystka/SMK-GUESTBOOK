@@ -24,6 +24,13 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        
+        // Users Management
+        Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->middleware('role:super_admin');
+        Route::post('/users', [\App\Http\Controllers\UserController::class, 'store'])->middleware('role:super_admin');
+        Route::patch('/users/{user}', [\App\Http\Controllers\UserController::class, 'update'])->middleware('role:super_admin');
+        Route::delete('/users/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->middleware('role:super_admin');
+
         Route::get('/dashboard/today', [DashboardController::class, 'today'])->middleware('role:super_admin,operator,security');
         Route::get('/visitors', [VisitorController::class, 'index'])->middleware('role:super_admin,operator,security');
         Route::get('/visitors/{visitor}', [VisitorController::class, 'show'])->middleware('role:super_admin,operator,security');
