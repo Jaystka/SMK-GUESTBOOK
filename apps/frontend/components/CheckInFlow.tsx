@@ -135,8 +135,92 @@ function RegistrationForm({ image, onRegistered, onBack }: { image: string; onRe
 
 function VisitForm({ visitor, image, employees, onSuccess, onBack }: { visitor: Visitor; image: string; employees: Employee[]; onSuccess: () => void; onBack: () => void }) {
   const [purpose, setPurpose] = useState(""); const [employeeId, setEmployeeId] = useState(""); const [meetPerson, setMeetPerson] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
-  async function submit(e: React.FormEvent) { e.preventDefault(); setBusy(true); setError(null); try { await api("/visits", { method: "POST", body: JSON.stringify({ visitor_id: visitor.id, purpose, employee_id: employeeId || null, meet_person: employeeId ? null : meetPerson, visit_photo: image, confidence_score: visitor.confidence ?? null, recognition_method: visitor.method }) }); onSuccess(); } catch (err) { setError(err instanceof ApiError ? err.message : "Registrasi gagal."); } finally { setBusy(false); } }
-  return <form onSubmit={submit} className="space-y-6 animate-in slide-in-from-right-4 duration-500"><div className="rounded-2xl bg-gradient-to-r from-brand-50 to-sky-50/30 p-6 border border-brand-100/50 shadow-sm"><p className="text-xs font-bold text-brand-600 tracking-widest uppercase mb-1">SELAMAT DATANG KEMBALI</p><h3 className="text-2xl font-extrabold text-slate-900">Senang melihat Anda kembali, {visitor.name}!</h3><p className="mt-1 text-sm text-slate-500">{visitor.institution || "Instansi belum dicatat"}{visitor.confidence != null ? ` • Akurasi ${(visitor.confidence * 100).toFixed(1)}%` : ""}</p></div>{error && <p className="rounded-xl bg-red-50 p-4 text-sm text-red-700 border border-red-100">{error}</p>}<div><label className="label">Apa keperluan kunjungan Anda hari ini?</label><textarea className="field min-h-32 resize-none" required value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="Contoh: Menemui kepala sekolah untuk rapat, mengantar barang, dll." /></div><div><label className="label">Siapa yang ingin Anda temui?</label><select className="field" value={employeeId} onChange={e => setEmployeeId(e.target.value)}><option value="">Pilih dari daftar atau ketik manual di bawah</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name}{e.department ? ` • ${e.department}` : ""}</option>)}</select></div>{!employeeId && <Field label="Tuliskan nama atau bagian yang ingin ditemui" value={meetPerson} onChange={setMeetPerson} required />}<div className="flex gap-4 pt-2"><button type="button" className="btn-secondary w-1/3" onClick={onBack}>Batal</button><button className="btn-primary flex-1" disabled={busy}>{busy ? "Mencatat..." : "Selesaikan Check-in"}</button></div></form>;
+  const [isGroup, setIsGroup] = useState(false); const [groupMembers, setGroupMembers] = useState<{name: string}[]>([]);
+
+  async function submit(e: React.FormEvent) { 
+    e.preventDefault(); 
+    if (isGroup && groupMembers.length === 0) {
+      setError("Daftar pengunjung tambahan tidak boleh kosong jika ini adalah kunjungan rombongan.");
+      return;
+    }
+    if (isGroup && groupMembers.some(m => !m.name.trim())) {
+      setError("Nama pengunjung tambahan tidak boleh kosong.");
+      return;
+    }
+    setBusy(true); setError(null); 
+    try { 
+      await api("/visits", { 
+        method: "POST", 
+        body: JSON.stringify({ 
+          visitor_id: visitor.id, 
+          purpose, 
+          employee_id: employeeId || null, 
+          meet_person: employeeId ? null : meetPerson, 
+          visit_photo: image, 
+          confidence_score: visitor.confidence ?? null, 
+          recognition_method: visitor.method,
+          is_group: isGroup,
+          group_members: isGroup ? groupMembers.filter(m => m.name.trim() !== '') : null
+        }) 
+      }); 
+      onSuccess(); 
+    } catch (err) { 
+      setError(err instanceof ApiError ? err.message : "Registrasi gagal."); 
+    } finally { 
+      setBusy(false); 
+    } 
+  }
+
+  function addMember() {
+    setGroupMembers([...groupMembers, { name: "" }]);
+  }
+
+  function updateMember(index: number, name: string) {
+    const newMembers = [...groupMembers];
+    newMembers[index].name = name;
+    setGroupMembers(newMembers);
+  }
+
+  function removeMember(index: number) {
+    setGroupMembers(groupMembers.filter((_, i) => i !== index));
+  }
+
+  return <form onSubmit={submit} className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+    <div className="rounded-2xl bg-gradient-to-r from-brand-50 to-sky-50/30 p-6 border border-brand-100/50 shadow-sm"><p className="text-xs font-bold text-brand-600 tracking-widest uppercase mb-1">SELAMAT DATANG KEMBALI</p><h3 className="text-2xl font-extrabold text-slate-900">Senang melihat Anda kembali, {visitor.name}!</h3><p className="mt-1 text-sm text-slate-500">{visitor.institution || "Instansi belum dicatat"}{visitor.confidence != null ? ` • Akurasi ${(visitor.confidence * 100).toFixed(1)}%` : ""}</p></div>
+    {error && <p className="rounded-xl bg-red-50 p-4 text-sm text-red-700 border border-red-100">{error}</p>}
+    
+    <div><label className="label">Apa keperluan kunjungan Anda hari ini?</label><textarea className="field min-h-32 resize-none" required value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="Contoh: Menemui kepala sekolah untuk rapat, mengantar barang, dll." /></div>
+    <div><label className="label">Siapa yang ingin Anda temui?</label><select className="field" value={employeeId} onChange={e => setEmployeeId(e.target.value)}><option value="">Pilih dari daftar atau ketik manual di bawah</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name}{e.department ? ` • ${e.department}` : ""}</option>)}</select></div>
+    {!employeeId && <Field label="Tuliskan nama atau bagian yang ingin ditemui" value={meetPerson} onChange={setMeetPerson} required />}
+    
+    <div className="rounded-2xl border border-slate-200 p-5 space-y-4">
+      <label className="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" checked={isGroup} onChange={(e) => setIsGroup(e.target.checked)} className="h-5 w-5 rounded border-slate-300 text-brand-600 focus:ring-brand-600" />
+        <span className="font-semibold text-slate-700">Ini adalah Kunjungan Rombongan</span>
+      </label>
+      
+      {isGroup && (
+        <div className="pl-8 space-y-3 mt-4">
+          <p className="text-sm text-slate-500">Tambahkan daftar nama orang yang ikut bersama Anda (selain Anda sendiri).</p>
+          {groupMembers.map((member, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <input type="text" placeholder="Nama Lengkap" className="field flex-1 !mt-0" value={member.name} onChange={(e) => updateMember(i, e.target.value)} required />
+              <button type="button" onClick={() => removeMember(i)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={addMember} className="btn-secondary w-full text-sm border-dashed">
+            + Tambah Anggota Rombongan
+          </button>
+        </div>
+      )}
+    </div>
+
+    <div className="flex gap-4 pt-2"><button type="button" className="btn-secondary w-1/3" onClick={onBack}>Batal</button><button className="btn-primary flex-1" disabled={busy}>{busy ? "Mencatat..." : "Selesaikan Check-in"}</button></div>
+  </form>;
 }
 
 function PhoneSearch({ onFound }: { onFound: (v: Visitor) => void }) { const [phone, setPhone] = useState(""); const [error, setError] = useState(""); async function search() { setError(""); try { const r = await api<{ id: string; name: string; institution?: string }>(`/visitors/search?phone=${encodeURIComponent(phone)}`); onFound({ id: r.id, name: r.name, institution: r.institution, method: "phone" }); } catch { setError("Data tidak ditemukan."); } } return <div className="mt-4 flex gap-2"><input className="field min-w-0" placeholder="Nomor telepon" value={phone} onChange={e => setPhone(e.target.value)} /><button className="btn-secondary shrink-0" onClick={search} disabled={!phone}>Cari</button>{error && <span className="self-center text-xs text-red-700">{error}</span>}</div> }

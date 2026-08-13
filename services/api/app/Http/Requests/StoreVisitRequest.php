@@ -10,5 +10,6 @@ class StoreVisitRequest extends FormRequest
   'employee_id' => ['nullable','uuid','exists:employees,id'], 'meet_person' => ['nullable','string','max:200','required_without:employee_id'],
   'visit_photo' => ['nullable', new Base64Image], 'confidence_score' => ['nullable','numeric','between:-1,1'],
   'recognition_method' => ['nullable','in:face,phone,manual,new_registration'], 'notes' => ['nullable','string','max:1000'],
+  'is_group' => ['nullable','boolean'], 'group_members' => ['nullable','array'], 'group_members.*.name' => ['required_with:group_members','string','max:200'],
  ]; }
 }

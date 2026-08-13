@@ -89,8 +89,21 @@ export default function VisitsPage() {
                 </thead>
                 <tbody>
                   {data.data.map((v) => (
-                    <tr key={v.id} className="border-t border-slate-100">
-                      <td className="p-4 font-bold">{v.visitor?.name}</td>
+                    <tr key={v.id} className="border-t border-slate-100 group relative">
+                      <td className="p-4">
+                        <div className="font-bold">{v.visitor?.name}</div>
+                        {v.is_group && (
+                          <div className="mt-1 text-xs font-semibold text-brand-600 bg-brand-50 inline-block px-2 py-0.5 rounded-full">
+                            Rombongan (+{v.group_members?.length || 0})
+                            <div className="hidden group-hover:block absolute z-10 bg-white border shadow-lg rounded p-2 text-slate-700 mt-1">
+                              <div className="font-bold border-b pb-1 mb-1">Anggota:</div>
+                              <ul className="list-disc pl-4">
+                                {v.group_members?.map((m, i) => <li key={i}>{m.name}</li>)}
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+                      </td>
                       <td className="p-4">{v.purpose}</td>
                       <td className="p-4">
                         {v.employee?.name || v.meet_person || "-"}

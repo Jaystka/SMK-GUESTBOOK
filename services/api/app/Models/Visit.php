@@ -14,7 +14,7 @@ class Visit extends Model
     protected $fillable = [
         'visitor_id', 'employee_id', 'purpose', 'meet_person', 'visit_photo_path',
         'confidence_score', 'recognition_method', 'checkin_time', 'checkout_time',
-        'created_by', 'notes',
+        'created_by', 'notes', 'is_group', 'group_members',
     ];
 
     protected function casts(): array
@@ -23,6 +23,8 @@ class Visit extends Model
             'confidence_score' => 'decimal:4',
             'checkin_time' => 'datetime',
             'checkout_time' => 'datetime',
+            'is_group' => 'boolean',
+            'group_members' => 'array',
         ];
     }
 

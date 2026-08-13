@@ -45,6 +45,8 @@ class VisitController extends Controller
                 'checkin_time' => now(),
                 'created_by' => $request->user()?->id,
                 'notes' => $data['notes'] ?? null,
+                'is_group' => $data['is_group'] ?? false,
+                'group_members' => $data['group_members'] ?? null,
             ]);
         } catch (Throwable $exception) {
             $images->delete($photoPath);
