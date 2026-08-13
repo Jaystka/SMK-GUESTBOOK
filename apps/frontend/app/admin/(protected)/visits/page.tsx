@@ -29,7 +29,11 @@ export default function VisitsPage() {
   
   async function showPhoto(url: string) {
     try {
-      const r = await fetch(url, {
+      let fetchUrl = url;
+      if (fetchUrl.startsWith("http://") && fetchUrl.includes(":443")) {
+        fetchUrl = fetchUrl.replace("http://", "https://").replace(":443", "");
+      }
+      const r = await fetch(fetchUrl, {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
       if (!r.ok) throw new Error("Gagal mengambil foto");
