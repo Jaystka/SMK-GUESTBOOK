@@ -1,5 +1,5 @@
 export type Employee = { id: string; name: string; department?: string | null; position?: string | null; active: boolean };
 export type VisitorMatch = { matched: boolean; visitor_id?: string; name?: string; institution?: string | null; confidence?: number | null; threshold?: number; quality?: Record<string, number> };
 export type AuthUser = { id: string; name: string; email: string; role: "super_admin" | "operator" | "security" };
-export type Visit = { id: string; visitor?: { id: string; name: string; institution?: string | null; phone_last4?: string | null }; employee?: { id?: string; name?: string; department?: string | null } | null; purpose: string; meet_person?: string | null; recognition_method: string; confidence_score?: string | null; checkin_time: string; checkout_time?: string | null };
+export type Visit = { id: string; visitor?: { id: string; name: string; institution?: string | null; phone_last4?: string | null }; employee?: { id?: string; name?: string; department?: string | null } | null; purpose: string; meet_person?: string | null; recognition_method: string; confidence_score?: string | null; checkin_time: string; checkout_time?: string | null; photo_url?: string | null };
 export type Paginated<T> = { data: T[]; links: unknown; meta: { current_page: number; last_page: number; per_page: number; total: number } };

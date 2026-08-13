@@ -13,12 +13,14 @@ type Visitor = {
   active: boolean;
   visits_count: number;
   created_at: string;
+  photo_url?: string | null;
 };
 
 export default function VisitorsPage() {
   const [data, setData] = useState<Paginated<Visitor> | null>(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   
   const [editingVisitor, setEditingVisitor] = useState<Visitor | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", institution: "", active: true });
@@ -117,6 +119,14 @@ export default function VisitorsPage() {
                       </td>
                       <td className="p-4">{new Date(v.created_at).toLocaleDateString("id-ID")}</td>
                       <td className="p-4 text-right space-x-2">
+                        {v.photo_url && (
+                          <button
+                            onClick={() => setPreviewPhoto(v.photo_url!)}
+                            className="rounded px-2 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50"
+                          >
+                            Foto
+                          </button>
+                        )}
                         <button
                           onClick={() => edit(v)}
                           className="rounded px-2 py-1 text-xs font-semibold text-brand-600 hover:bg-brand-50"
@@ -192,6 +202,22 @@ export default function VisitorsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {previewPhoto && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/75 p-4" onClick={() => setPreviewPhoto(null)}>
+          <div className="relative max-h-full max-w-2xl overflow-hidden rounded-xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b p-4">
+              <h3 className="font-bold">Preview Wajah</h3>
+              <button onClick={() => setPreviewPhoto(null)} className="text-slate-400 hover:text-slate-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+            <div className="p-4 flex justify-center">
+              <img src={previewPhoto} alt="Wajah Pengguna" className="max-h-[70vh] rounded object-contain" />
+            </div>
           </div>
         </div>
       )}
