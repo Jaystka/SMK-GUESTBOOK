@@ -26,6 +26,20 @@ export default function VisitsPage() {
     await api(`/visits/${id}/checkout`, { method: "PATCH", auth: true });
     await load();
   }
+  
+  async function showPhoto(url: string) {
+    try {
+      const r = await fetch(url, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+      if (!r.ok) throw new Error("Gagal mengambil foto");
+      const blob = await r.blob();
+      setPreviewPhoto(URL.createObjectURL(blob));
+    } catch (e: any) {
+      alert(e.message);
+    }
+  }
+
   async function download() {
     const r = await fetch(`${API_URL}/reports/visits.csv`, {
       headers: { Authorization: `Bearer ${getToken()}` },
@@ -89,7 +103,7 @@ export default function VisitsPage() {
                       <td className="p-4 space-x-2">
                         {v.photo_url && (
                           <button
-                            onClick={() => setPreviewPhoto(v.photo_url!)}
+                            onClick={() => showPhoto(v.photo_url!)}
                             className="rounded-lg bg-blue-100 px-3 py-2 font-semibold text-blue-800"
                           >
                             Foto

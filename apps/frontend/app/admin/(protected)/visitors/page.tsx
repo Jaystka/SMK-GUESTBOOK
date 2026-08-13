@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { Paginated } from "@/lib/types";
+import { getToken } from "@/lib/auth";
 import { Empty, LoadingCard, PageHeader } from "@/components/AdminUi";
 
 type Visitor = {
@@ -66,6 +67,19 @@ export default function VisitorsPage() {
     await load();
   }
 
+  async function showPhoto(url: string) {
+    try {
+      const r = await fetch(url, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+      if (!r.ok) throw new Error("Gagal mengambil foto");
+      const blob = await r.blob();
+      setPreviewPhoto(URL.createObjectURL(blob));
+    } catch (e: any) {
+      alert(e.message);
+    }
+  }
+
   return (
     <>
       <PageHeader title="Data tamu" description="Cari profil tamu dan lihat frekuensi kunjungannya." />
@@ -121,7 +135,7 @@ export default function VisitorsPage() {
                       <td className="p-4 text-right space-x-2">
                         {v.photo_url && (
                           <button
-                            onClick={() => setPreviewPhoto(v.photo_url!)}
+                            onClick={() => showPhoto(v.photo_url!)}
                             className="rounded px-2 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50"
                           >
                             Foto
