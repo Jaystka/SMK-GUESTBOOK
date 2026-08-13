@@ -43,6 +43,7 @@ class VisitController extends Controller
                 'confidence_score' => $data['confidence_score'] ?? null,
                 'recognition_method' => $data['recognition_method'] ?? 'manual',
                 'checkin_time' => now(),
+                'expected_checkout_time' => isset($data['duration']) ? now()->addHours((int)$data['duration']) : null,
                 'created_by' => $request->user()?->id,
                 'notes' => $data['notes'] ?? null,
                 'is_group' => $data['is_group'] ?? false,

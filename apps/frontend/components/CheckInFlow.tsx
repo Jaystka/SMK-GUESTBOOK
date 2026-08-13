@@ -136,6 +136,7 @@ function RegistrationForm({ image, onRegistered, onBack }: { image: string; onRe
 function VisitForm({ visitor, image, employees, onSuccess, onBack }: { visitor: Visitor; image: string; employees: Employee[]; onSuccess: () => void; onBack: () => void }) {
   const [purpose, setPurpose] = useState(""); const [employeeId, setEmployeeId] = useState(""); const [meetPerson, setMeetPerson] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
   const [isGroup, setIsGroup] = useState(false); const [groupMembers, setGroupMembers] = useState<{name: string}[]>([]);
+  const [duration, setDuration] = useState("");
 
   async function submit(e: React.FormEvent) { 
     e.preventDefault(); 
@@ -160,7 +161,8 @@ function VisitForm({ visitor, image, employees, onSuccess, onBack }: { visitor: 
           confidence_score: visitor.confidence ?? null, 
           recognition_method: visitor.method,
           is_group: isGroup,
-          group_members: isGroup ? groupMembers.filter(m => m.name.trim() !== '') : null
+          group_members: isGroup ? groupMembers.filter(m => m.name.trim() !== '') : null,
+          duration: duration ? parseInt(duration) : null
         }) 
       }); 
       onSuccess(); 
@@ -217,6 +219,24 @@ function VisitForm({ visitor, image, employees, onSuccess, onBack }: { visitor: 
           </button>
         </div>
       )}
+    </div>
+    
+    <div>
+      <label className="label">Berapa lama estimasi kunjungan Anda?</label>
+      <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "1 Jam", value: "1" },
+          { label: "2 Jam", value: "2" },
+          { label: "3 Jam", value: "3" },
+          { label: "Lebih", value: "" }
+        ].map((opt) => (
+          <label key={opt.label} className={`flex items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${duration === opt.value ? 'bg-brand-50 border-brand-500 text-brand-700 font-bold' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-300'}`}>
+            <input type="radio" name="duration" className="hidden" value={opt.value} checked={duration === opt.value} onChange={(e) => setDuration(e.target.value)} />
+            {opt.label}
+          </label>
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-slate-500">Kami akan melakukan check-out otomatis saat waktu yang Anda pilih habis.</p>
     </div>
 
     <div className="flex gap-4 pt-2"><button type="button" className="btn-secondary w-1/3" onClick={onBack}>Batal</button><button className="btn-primary flex-1" disabled={busy}>{busy ? "Mencatat..." : "Selesaikan Check-in"}</button></div>
