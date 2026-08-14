@@ -12,8 +12,8 @@ export function CheckInFlow() {
   const [locationAllowed, setLocationAllowed] = useState<boolean | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
-  useEffect(() => { 
-    api<{ data: Employee[] }>("/employees/options").then(r => setEmployees(r.data)).catch(() => setEmployees([])); 
+  useEffect(() => {
+    api<{ data: Employee[] }>("/employees/options").then(r => setEmployees(r.data)).catch(() => setEmployees([]));
     checkLocation();
   }, []);
 
@@ -33,16 +33,16 @@ export function CheckInFlow() {
             const lat2 = parseFloat(settings.radius_lat);
             const lon2 = parseFloat(settings.radius_lng);
             const maxDist = parseInt(settings.radius_meters, 10);
-            
+
             const R = 6371e3; // meters
-            const phi1 = lat1 * Math.PI/180;
-            const phi2 = lat2 * Math.PI/180;
-            const dPhi = (lat2-lat1) * Math.PI/180;
-            const dLambda = (lon2-lon1) * Math.PI/180;
-            const a = Math.sin(dPhi/2) * Math.sin(dPhi/2) + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dLambda/2) * Math.sin(dLambda/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const phi1 = lat1 * Math.PI / 180;
+            const phi2 = lat2 * Math.PI / 180;
+            const dPhi = (lat2 - lat1) * Math.PI / 180;
+            const dLambda = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dPhi / 2) * Math.sin(dPhi / 2) + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dLambda / 2) * Math.sin(dLambda / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             const d = R * c;
-            
+
             if (d > maxDist) {
               setLocationError(`Anda berada terlalu jauh (${Math.round(d)} meter) dari lokasi sekolah. Maksimal jarak adalah ${maxDist} meter.`);
               setLocationAllowed(false);
@@ -87,7 +87,7 @@ export function CheckInFlow() {
   if (locationAllowed === null) {
     return <div className="grid min-h-[60vh] place-items-center"><div className="text-center"><div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600"></div><p className="text-slate-500 font-medium">Memeriksa lokasi Anda...</p></div></div>;
   }
-  
+
   if (locationAllowed === false) {
     return (
       <div className="grid min-h-[60vh] place-items-center">
@@ -109,7 +109,7 @@ export function CheckInFlow() {
         <div className="mb-6">
           <span className="badge">REGISTRASI TAMU</span>
           <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900">Selamat Datang!</h2>
-          <p className="mt-2 text-slate-500 leading-relaxed">Silakan posisikan wajah Anda di depan kamera untuk memulai. Kami akan mengenali Anda dalam hitungan detik.</p>
+          <p className="mt-2 text-slate-500 leading-relaxed">Silakan posisikan wajah Anda di depan kamera untuk memulai.</p>
         </div>
       )}
       {message && <div className="mb-5 rounded-2xl bg-amber-50 p-4 text-sm text-amber-900">{message}</div>}
@@ -135,11 +135,11 @@ function RegistrationForm({ image, onRegistered, onBack }: { image: string; onRe
 
 function VisitForm({ visitor, image, employees, onSuccess, onBack }: { visitor: Visitor; image: string; employees: Employee[]; onSuccess: () => void; onBack: () => void }) {
   const [purpose, setPurpose] = useState(""); const [employeeId, setEmployeeId] = useState(""); const [meetPerson, setMeetPerson] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null);
-  const [isGroup, setIsGroup] = useState(false); const [groupMembers, setGroupMembers] = useState<{name: string}[]>([]);
+  const [isGroup, setIsGroup] = useState(false); const [groupMembers, setGroupMembers] = useState<{ name: string }[]>([]);
   const [duration, setDuration] = useState("");
 
-  async function submit(e: React.FormEvent) { 
-    e.preventDefault(); 
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
     if (isGroup && groupMembers.length === 0) {
       setError("Daftar pengunjung tambahan tidak boleh kosong jika ini adalah kunjungan rombongan.");
       return;
@@ -148,29 +148,29 @@ function VisitForm({ visitor, image, employees, onSuccess, onBack }: { visitor: 
       setError("Nama pengunjung tambahan tidak boleh kosong.");
       return;
     }
-    setBusy(true); setError(null); 
-    try { 
-      await api("/visits", { 
-        method: "POST", 
-        body: JSON.stringify({ 
-          visitor_id: visitor.id, 
-          purpose, 
-          employee_id: employeeId || null, 
-          meet_person: employeeId ? null : meetPerson, 
-          visit_photo: image, 
-          confidence_score: visitor.confidence ?? null, 
+    setBusy(true); setError(null);
+    try {
+      await api("/visits", {
+        method: "POST",
+        body: JSON.stringify({
+          visitor_id: visitor.id,
+          purpose,
+          employee_id: employeeId || null,
+          meet_person: employeeId ? null : meetPerson,
+          visit_photo: image,
+          confidence_score: visitor.confidence ?? null,
           recognition_method: visitor.method,
           is_group: isGroup,
           group_members: isGroup ? groupMembers.filter(m => m.name.trim() !== '') : null,
           duration: duration ? parseInt(duration) : null
-        }) 
-      }); 
-      onSuccess(); 
-    } catch (err) { 
-      setError(err instanceof ApiError ? err.message : "Registrasi gagal."); 
-    } finally { 
-      setBusy(false); 
-    } 
+        })
+      });
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Registrasi gagal.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   function addMember() {
@@ -190,17 +190,17 @@ function VisitForm({ visitor, image, employees, onSuccess, onBack }: { visitor: 
   return <form onSubmit={submit} className="space-y-6 animate-in slide-in-from-right-4 duration-500">
     <div className="rounded-2xl bg-gradient-to-r from-brand-50 to-sky-50/30 p-6 border border-brand-100/50 shadow-sm"><p className="text-xs font-bold text-brand-600 tracking-widest uppercase mb-1">SELAMAT DATANG KEMBALI</p><h3 className="text-2xl font-extrabold text-slate-900">Senang melihat Anda kembali, {visitor.name}!</h3><p className="mt-1 text-sm text-slate-500">{visitor.institution || "Instansi belum dicatat"}{visitor.confidence != null ? ` • Akurasi ${(visitor.confidence * 100).toFixed(1)}%` : ""}</p></div>
     {error && <p className="rounded-xl bg-red-50 p-4 text-sm text-red-700 border border-red-100">{error}</p>}
-    
+
     <div><label className="label">Apa keperluan kunjungan Anda hari ini?</label><textarea className="field min-h-32 resize-none" required value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="Contoh: Menemui kepala sekolah untuk rapat, mengantar barang, dll." /></div>
     <div><label className="label">Siapa yang ingin Anda temui?</label><select className="field" value={employeeId} onChange={e => setEmployeeId(e.target.value)}><option value="">Pilih dari daftar atau ketik manual di bawah</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name}{e.department ? ` • ${e.department}` : ""}</option>)}</select></div>
     {!employeeId && <Field label="Tuliskan nama atau bagian yang ingin ditemui" value={meetPerson} onChange={setMeetPerson} required />}
-    
+
     <div className="rounded-2xl border border-slate-200 p-5 space-y-4">
       <label className="flex items-center gap-3 cursor-pointer">
         <input type="checkbox" checked={isGroup} onChange={(e) => setIsGroup(e.target.checked)} className="h-5 w-5 rounded border-slate-300 text-brand-600 focus:ring-brand-600" />
         <span className="font-semibold text-slate-700">Ini adalah Kunjungan Rombongan</span>
       </label>
-      
+
       {isGroup && (
         <div className="pl-8 space-y-3 mt-4">
           <p className="text-sm text-slate-500">Tambahkan daftar nama orang yang ikut bersama Anda (selain Anda sendiri).</p>
@@ -220,7 +220,7 @@ function VisitForm({ visitor, image, employees, onSuccess, onBack }: { visitor: 
         </div>
       )}
     </div>
-    
+
     <div>
       <label className="label">Berapa lama estimasi kunjungan Anda?</label>
       <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
